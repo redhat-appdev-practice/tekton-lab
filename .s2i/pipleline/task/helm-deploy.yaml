@@ -5,25 +5,40 @@ metadata:
 spec:
   description: Deploy a Helm Chart
   params:
+    - name: image-name
+      description: The name of the Docker image to build and push
+      type: string
+    - name: image-tag
+      description: The tag of the Docker image to build and push
+      type: string
     - default: >-
         docker.io/lachlanevenson/k8s-helm@sha256:5c792f29950b388de24e7448d378881f68b3df73a7b30769a6aa861061fd08ae
       description: Helm Image to use
       name: helm_image
       type: string
-    - default: >-
-        .s2i/chart
+    - default: .s2i/chart
       description: Location of the Chart
       name: chart_location
+      type: string
+    - default: example-application
+      description: Name of the Chart
+      name: release_name
       type: string
   steps:
     - name: helm-upgrade
       image: $(params.helm_image)
-      workingDir: /workspace/source
+      workingDir: $(workspaces.source.path)/code
       env:
         - name: CHART_LOCATION
           value: $(params.chart_location)
+        - name: RELEASE_NAME
+          value: $(params.release_name)
+        - name: IMAGE_NAME
+          value: $(params.image-name)
+        - name: IMAGE_TAG
+          value: $(params.image-tag)
       script: >
-        helm upgrade -i --wait --timeout=600s ${CHART_LOCATION} --debug
+        helm upgrade -i --wait --timeout=600s ${RELEASE_NAME} ${CHART_LOCATION} --set image.name=${IMAGE_NAME} --set image.tag=${IMAGE_TAG} --debug
   workspaces:
     - description: Persistance Storage between Pods.
       name: source

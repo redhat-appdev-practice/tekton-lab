@@ -7,12 +7,12 @@ spec:
   params:
     - name: maven-image
       description: Namespace where the image will be pushed
-      default: registry.access.redhat.com/redhat-openjdk-18/openjdk18-openshift:1.15-7
+      default: registry.access.redhat.com/ubi8/openjdk-17:1.16-2
       type: string
   steps:
     - name: maven-build
       image: $(params.maven-image)
-      workingDir: /workspace/source
+      workingDir: $(workspaces.source.path)/code
       command:
         - mvn
       args:
