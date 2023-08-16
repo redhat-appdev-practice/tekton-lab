@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pipeline-example
+spec:
+  selector:
+    matchLabels:
+      app: pipeline-example
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: pipeline-example
+    spec:
+      containers:
+        - name: container
+          image: >-
+            image-registry.openshift-image-registry.svc:5000/{{ .Release.namespace }}/{{ .Values.image.name }}:{{ .Values.image.tag }}
+          ports:
+            - containerPort: 8080
+              protocol: TCP

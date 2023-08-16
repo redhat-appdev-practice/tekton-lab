@@ -1,0 +1,29 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: helm-deploy
+spec:
+  description: Deploy a Helm Chart
+  params:
+    - default: >-
+        docker.io/lachlanevenson/k8s-helm@sha256:5c792f29950b388de24e7448d378881f68b3df73a7b30769a6aa861061fd08ae
+      description: Helm Image to use
+      name: helm_image
+      type: string
+    - default: >-
+        .s2i/chart
+      description: Location of the Chart
+      name: chart_location
+      type: string
+  steps:
+    - name: helm-upgrade
+      image: $(params.helm_image)
+      workingDir: /workspace/source
+      env:
+        - name: CHART_LOCATION
+          value: $(params.chart_location)
+      script: >
+        helm upgrade -i --wait --timeout=600s ${CHART_LOCATION} --debug
+  workspaces:
+    - description: Persistance Storage between Pods.
+      name: source

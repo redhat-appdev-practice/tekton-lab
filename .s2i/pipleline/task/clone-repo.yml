@@ -1,0 +1,36 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: git-clone-task
+spec:
+  params:
+    - name: repo-url
+      description: The URL of the Git repository to clone.
+      type: string
+    - name: destination-path
+      description: The local destination path for the cloned repository.
+      type: string
+      default: '.'
+  results:
+    - description: The precise commit SHA that was fetched by this Task.
+      name: commit
+  steps:
+    - name: git-clone
+      image: alpine/git
+      script: |
+        # Clone Git Repo into `output` workspace
+        ls
+        pwd
+        git clone $(inputs.params.repo-url) $(workspaces.output.path)/$(inputs.destination-path)
+        cd $(workspaces.output.path)
+
+        #Save Git Commit's Short Sha and push it to the results
+        RESULT_SHA="$(git rev-parse HEAD)"
+        printf "%s" "${RESULT_SHA}" > "$(results.commit.path)"
+
+        # Just so we print out a fun finish message 
+        git checkout first-task-run
+        cat hello-world.txt
+  workspaces:
+    - description: Persistance Storage between Pods.
+      name: output

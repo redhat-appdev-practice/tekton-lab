@@ -1,0 +1,45 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: build-and-push-to-openshift-registry
+spec:
+  params:
+    - name: image-name
+      description: The name of the Docker image to build and push
+      type: string
+    - name: dockerfile-path
+      description: The path to the Dockerfile for building the image
+      type: string
+    - name: internal-registry
+      description: URL of the internal Openshift Registry
+      default: image-registry.openshift-image-registry.svc:5000
+      type: string
+    - name: namespace
+      description: Namespace where the image will be pushed
+      default: pipeline-example
+      type: string
+    - name: podman-image
+      description: Namespace where the image will be pushed
+      default: registry.access.redhat.com/ubi9/podman:9.2-12
+      type: string
+      
+  steps:
+    - name: build-image-and-push-to-internal-registry
+      image: $(params.podman-image)
+      workingDir: /workspace/source
+      env:
+        - name: IMAGE_NAME
+          value: $(params.image-name)
+        - name: DOCKERFILE_PATH
+          value: $(params.dockerfile-path)
+        - name: INTERNAL_REGISTRY
+          value: $(params.internal-registry)
+        - name: NAMESPACE
+          value: $(params.namespace)
+      script: >
+        podman build -t ${IMAGE_NAME} ${DOCKERFILE_PATH}
+        podman tag ${IMAGE_NAME} ${INTERNAL_REGISTRY}/${NAMESPACE}/${IMAGE_NAME}
+        podman push ${INTERNAL_REGISTRY}/${NAMESPACE}/${IMAGE_NAME}
+  workspaces:
+    - description: Persistance Storage between Pods.
+      name: source
