@@ -16,7 +16,7 @@ spec:
       description: Helm Image to use
       name: helm_image
       type: string
-    - default: .s2i/chart
+    - default: .infra/chart
       description: Location of the Chart
       name: chart_location
       type: string

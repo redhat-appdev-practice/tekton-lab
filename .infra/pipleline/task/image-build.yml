@@ -12,7 +12,7 @@ spec:
       type: string
     - name: dockerfile-path
       description: The path to the Dockerfile for building the image
-      default: src/main/docker/Dockerfile.jvm
+      default: src/main/docker/Dockerfile-custom.jvm
       type: string
     - name: internal-registry
       description: URL of the internal Openshift Registry
