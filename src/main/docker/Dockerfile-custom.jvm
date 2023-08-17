@@ -36,8 +36,9 @@ RUN microdnf install curl ca-certificates ${JAVA_PACKAGE} \
     && chmod "g+rwX" /deployments \
     && chown 1001:root /deployments \
     && curl https://repo1.maven.org/maven2/io/fabric8/run-java-sh/${RUN_JAVA_VERSION}/run-java-sh-${RUN_JAVA_VERSION}-sh.sh -o /deployments/run-java.sh \
+    # In Openshift scripts are run with a user that is part of the root group, so we need to make sure this script is executable by the root group
     && chown 1001:0 /deployments/run-java.sh \
-    && chmod 540 /deployments/run-java.sh \
+    && chmod 550 /deployments/run-java.sh \
     && echo "securerandom.source=file:/dev/urandom" >> /etc/alternatives/jre/lib/security/java.security
 
 # Configure the JAVA_OPTIONS, you can add -XshowSettings:vm to also display the heap size.
