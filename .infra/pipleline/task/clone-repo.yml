@@ -15,14 +15,14 @@ spec:
       image: alpine/git
       workingDir: $(workspaces.output.path)/code
       script: |
-        # Remove any existing files from the `output` workspace
-        rm -rf *
+        # Remove any existing files from our code workspace
+        rm -rf -- ..?* .[!.]* *
         
         # Clone Git Repo into `source` workspace
         git clone $(inputs.params.repo-url) .
 
         #Save Git Commit's Short Sha and push it to the results
-        RESULT_SHA="$(git rev-parse HEAD)"
+        RESULT_SHA="$(git rev-parse --short HEAD)"
         printf "%s" "${RESULT_SHA}" > "$(results.commit.path)"
   workspaces:
     - description: Persistance Storage between Pods.

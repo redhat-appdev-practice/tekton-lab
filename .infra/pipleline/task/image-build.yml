@@ -22,15 +22,18 @@ spec:
       description: Namespace where the image will be pushed
       default: pipeline-example
       type: string
-    - name: podman-image
-      description: Namespace where the image will be pushed
-      default: registry.access.redhat.com/ubi9/podman:9.2-12
+    - name: buildah-image
+      description: Buildah Image
+      default: registry.access.redhat.com/ubi8/buildah:8.8-9
       type: string
       
   steps:
     - name: build-image-and-push-to-internal-registry
-      image: $(params.podman-image)
+      image: $(params.buildah-image)
       workingDir: $(workspaces.source.path)/code
+      securityContext:
+        capabilities:
+          add: ["SETFCAP"]
       env:
         - name: IMAGE_NAME
           value: $(params.image-name)
@@ -42,16 +45,19 @@ spec:
           value: $(params.internal-registry)
         - name: NAMESPACE
           value: $(params.namespace)
-      script: >
-        podman build -t ${IMAGE_NAME} ${DOCKERFILE_PATH}
+      script: |
+        # Setting the VFS Storage Driver allows us to run Buildah in a non-privileged container
+        # More information found here: https://docs.docker.com/storage/storagedriver/vfs-driver/
+        BUILDAH_OPTS="--storage-driver=vfs"
+        buildah ${BUILDAH_OPTS} bud -f ${DOCKERFILE_PATH} -t ${IMAGE_NAME}
         
         # Push Tagged Version with Commit SHA
-        podman tag ${IMAGE_NAME} ${INTERNAL_REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}
-        podman push ${INTERNAL_REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}
+        buildah ${BUILDAH_OPTS} tag ${IMAGE_NAME} ${INTERNAL_REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}
+        buildah ${BUILDAH_OPTS} push ${INTERNAL_REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}
 
         # Push Latest Tag
-        podman tag ${IMAGE_NAME} ${INTERNAL_REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest
-        podman push ${INTERNAL_REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest
+        buildah ${BUILDAH_OPTS} tag ${IMAGE_NAME} ${INTERNAL_REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest
+        buildah ${BUILDAH_OPTS} push ${INTERNAL_REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest
   workspaces:
     - description: Persistance Storage between Pods.
       name: source

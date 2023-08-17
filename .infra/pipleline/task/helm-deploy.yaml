@@ -38,7 +38,7 @@ spec:
         - name: IMAGE_TAG
           value: $(params.image-tag)
       script: >
-        helm upgrade -i --wait --timeout=600s ${RELEASE_NAME} ${CHART_LOCATION} --set image.name=${IMAGE_NAME} --set image.tag=${IMAGE_TAG} --debug
+        helm upgrade -i ${RELEASE_NAME} ${CHART_LOCATION} --set image.name=${IMAGE_NAME} --set image.tag=${IMAGE_TAG} --debug
   workspaces:
     - description: Persistance Storage between Pods.
       name: source
