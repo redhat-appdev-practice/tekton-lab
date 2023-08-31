@@ -1,0 +1,12 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: example-deployment
+spec:
+  to:
+    kind: Service
+    name: example-deployment
+    weight: 100
+  port:
+    targetPort: 8080
+  wildcardPolicy: None

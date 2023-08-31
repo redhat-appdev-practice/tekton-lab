@@ -1,0 +1,14 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: conditional-task
+spec:
+  results:
+    - description: The precise commit SHA that was fetched by this Task.
+      name: conditionMet
+  steps:
+    - name: git-clone
+      image: ubi8/ubi
+      script: |
+        echo "Conditional Task running..."
+        printf "%s" "true" > "$(results.conditionMet.path)"

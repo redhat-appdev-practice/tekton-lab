@@ -1,0 +1,62 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: example-pipeline
+spec:
+  params:
+    - default: 'https://github.com/redhat-appdev-practice/tekton-lab.git'
+      description: Repository Url
+      name: repo-url
+      type: string
+  tasks:
+    - name: git-clone-task
+      params:
+        - name: repo-url
+          value: $(params.repo-url)
+      taskRef:
+        kind: Task
+        name: git-clone-task
+      workspaces:
+        - name: output
+          workspace: source-repo
+    - name: helm-deploy
+      params:
+        - name: image-name
+          value: example-deploy
+        - name: image-tag
+          value: $(tasks.git-clone-task.results.commit)
+      runAfter:
+        - git-clone-task
+      taskRef:
+        kind: Task
+        name: helm-deploy
+      workspaces:
+        - name: source
+          workspace: source-repo
+    - name: maven-build
+      runAfter:
+        - git-clone-task
+      taskRef:
+        kind: Task
+        name: maven-build
+      workspaces:
+        - name: source
+          workspace: source-repo
+    - name: build-and-push
+      params:
+        - name: image-name
+          value: example-deploy
+        - name: image-tag
+          value: $(tasks.git-clone-task.results.commit)
+        - name: namespace
+          value: pipeline-example
+      runAfter:
+        - maven-build
+      taskRef:
+        kind: Task
+        name: build-and-push-to-openshift-registry
+      workspaces:
+        - name: source
+          workspace: source-repo
+  workspaces:
+    - name: source-repo
